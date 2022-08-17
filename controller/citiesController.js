@@ -3,7 +3,7 @@
 const response = require('../response');
 const db = require('../settings/db');
 
-exports.users = (req, res) => {
+exports.cities = (req, res) => {
   db.query('SELECT * FROM `cities`', (error, rows, fields) => {
     if (error) {
       console.log(error);
