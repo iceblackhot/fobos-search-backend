@@ -6,6 +6,7 @@ module.exports = (app) => {
   const streetsController = require('./../controller/streetsController');
   const statusesController = require('./../controller/statusesController');
   const workersController = require('./../controller/workersController');
+  const requestsController = require('./../controller/requestsController');
 
   app.route('/').get(indexController.index);
 
@@ -17,4 +18,6 @@ module.exports = (app) => {
   app.route('/statuses').get(statusesController.statuses);
 
   app.route('/workers').get(workersController.workers);
+
+  app.route('/requests').get(requestsController.requests);
 };
