@@ -8,6 +8,8 @@ module.exports = (app) => {
   const workersController = require('./../controller/workersController');
   const requestsController = require('./../controller/requestsController');
   const taskDoneController = require('./../controller/taskDoneController');
+  const countController = require('./../controller/countController');
+  const sortController = require('./../controller/sortController');
 
   app.route('/').get(indexController.index);
 
@@ -25,4 +27,11 @@ module.exports = (app) => {
   app.route('/requests/edit/save/:id').post(requestsController.editApply);
 
   app.route('/requests/edit/save/taskDone/:id').post(taskDoneController.taskDone);
+
+  app.route('/requests/:done').post(requestsController.requests);
+
+  app.route('/countDoneReq').get(countController.countDoneReq);
+  app.route('/countRelevantReq').get(countController.countRelevantReq);
+
+  app.route('/sortByAddDate/:done').post(sortController.sortByAddDate);
 };
