@@ -10,6 +10,7 @@ module.exports = (app) => {
   const taskDoneController = require('./../controller/taskDoneController');
   const countController = require('./../controller/countController');
   const sortController = require('./../controller/sortController');
+  const searchController = require('./../controller/searchController');
 
   app.route('/').get(indexController.index);
 
@@ -34,4 +35,6 @@ module.exports = (app) => {
   app.route('/countRelevantReq').get(countController.countRelevantReq);
 
   app.route('/sortByAddDate/:done').post(sortController.sortByAddDate);
+
+  app.route('/searchTask/:query').post(searchController.searchTask);
 };
