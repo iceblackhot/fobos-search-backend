@@ -11,6 +11,7 @@ module.exports = (app) => {
   const countController = require('./../controller/countController');
   const sortController = require('./../controller/sortController');
   const searchController = require('./../controller/searchController');
+  const rangeDateController = require('./../controller/rangeDateController');
 
   app.route('/').get(indexController.index);
 
@@ -37,4 +38,6 @@ module.exports = (app) => {
   app.route('/sortByAddDate/:done').post(sortController.sortByAddDate);
 
   app.route('/searchTask/:query').post(searchController.searchTask);
+
+  app.route('/rangeByAddDate').post(rangeDateController.searchByDate);
 };

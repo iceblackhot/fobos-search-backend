@@ -12,11 +12,15 @@ exports.searchTask = (req, res) => {
 
   let value = req.params.query ? req.params.query : '';
 
-  db.query('SELECT * FROM `requests` WHERE lname LIKE ?', ['%' + value + '%'], (error, rows) => {
-    if (error) {
-      console.log(error);
-    } else {
-      response.status(rows, res);
-    }
-  });
+  db.query(
+    'SELECT * FROM `requests` WHERE lname LIKE ? OR mobile LIKE ? OR building LIKE ?',
+    ['%' + value + '%', '%' + value + '%', '%' + value + '%'],
+    (error, rows) => {
+      if (error) {
+        console.log(error);
+      } else {
+        response.status(rows, res);
+      }
+    },
+  );
 };
