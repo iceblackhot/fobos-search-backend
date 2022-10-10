@@ -13,8 +13,8 @@ exports.searchTask = (req, res) => {
   let value = req.params.query ? req.params.query : '';
 
   db.query(
-    'SELECT * FROM `requests` WHERE lname LIKE ? OR mobile LIKE ? OR building LIKE ?',
-    ['%' + value + '%', '%' + value + '%', '%' + value + '%'],
+    'SELECT * FROM `requests` WHERE `lname` LIKE ? OR `fname` LIKE ? OR `patronymic` LIKE ? OR `mobile` LIKE ? OR `building` LIKE ?',
+    ['%' + value + '%', '%' + value + '%', '%' + value + '%', '%' + value + '%', '%' + value + '%'],
     (error, rows) => {
       if (error) {
         console.log(error);
