@@ -1,11 +1,12 @@
 'use strict';
 
-exports.status = (values, res) => {
+exports.status = (statusCode, values, res) => {
   const data = {
-    status: 200,
+    status: statusCode,
     values: values,
   };
 
+  res.status(data.status);
   res.json(data);
   res.end();
 };

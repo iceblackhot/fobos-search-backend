@@ -17,9 +17,9 @@ exports.searchTask = (req, res) => {
     ['%' + value + '%', '%' + value + '%', '%' + value + '%', '%' + value + '%', '%' + value + '%'],
     (error, rows) => {
       if (error) {
-        console.log(error);
+        response.status(400, error, res);
       } else {
-        response.status(rows, res);
+        response.status(200, rows, res);
       }
     },
   );

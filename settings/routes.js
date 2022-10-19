@@ -1,7 +1,9 @@
 'use strict';
 
 module.exports = (app) => {
-  const indexController = require('./../controller/indexController');
+  const passport = require('passport');
+
+  const usersController = require('../controller/usersController');
   const citiesController = require('./../controller/citiesController');
   const streetsController = require('./../controller/streetsController');
   const statusesController = require('./../controller/statusesController');
@@ -16,7 +18,11 @@ module.exports = (app) => {
   const faqController = require('./../controller/faqController');
   const connFilterController = require('./../controller/connFilterController');
 
-  app.route('/').get(indexController.index);
+  app
+    .route('/api/users')
+    .get(passport.authenticate('jwt', {session: false}), usersController.getAllUsers);
+  app.route('/api/auth/signup').post(usersController.signup);
+  app.route('/api/auth/signin').get(usersController.signin);
 
   app.route('/cities').get(citiesController.cities);
 
@@ -28,9 +34,9 @@ module.exports = (app) => {
 
   app.route('/workers').get(workersController.workers);
 
-  app.route('/requests/:id/').post(requestsController.requests);
+  app.route('/requests/:id').post(requestsController.requests);
   app.route('/requests').post(requestsController.requests);
-  app.route('/requests/add').post(requestsController.add);
+  app.route('/requestsAdd').post(requestsController.add);
   app.route('/requests/edit/save/:id').post(requestsController.editApply);
 
   app.route('/requests/edit/save/taskDone/:id').post(taskDoneController.taskDone);

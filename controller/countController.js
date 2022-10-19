@@ -10,9 +10,9 @@ exports.countDoneReq = (req, res) => {
     'SELECT COUNT(id) FROM `requests` WHERE `type` = ' + type + ' AND  taskDone = ' + done,
     (error, rows) => {
       if (error) {
-        console.log(error);
+        response.status(400, error, res);
       } else {
-        response.status(rows, res);
+        response.status(200, rows, res);
       }
     },
   );
@@ -25,9 +25,9 @@ exports.countRelevantReq = (req, res) => {
     'SELECT COUNT(id) FROM `requests` WHERE `type` = ' + type + ' AND taskDone = ' + done,
     (error, rows) => {
       if (error) {
-        console.log(error);
+        response.status(400, error, res);
       } else {
-        response.status(rows, res);
+        response.status(200, rows, res);
       }
     },
   );
@@ -40,9 +40,9 @@ exports.countRelevantFaq = (req, res) => {
     'SELECT COUNT(id) FROM `requests` WHERE `type` = ' + type + ' AND taskDone = ' + done,
     (error, rows) => {
       if (error) {
-        console.log(error);
+        response.status(400, error, res);
       } else {
-        response.status(rows, res);
+        response.status(200, rows, res);
       }
     },
   );
@@ -55,9 +55,9 @@ exports.countDoneFaq = (req, res) => {
     'SELECT COUNT(id) FROM `requests` WHERE `type` = ' + type + ' AND taskDone = ' + done,
     (error, rows) => {
       if (error) {
-        console.log(error);
+        response.status(400, error, res);
       } else {
-        response.status(rows, res);
+        response.status(200, rows, res);
       }
     },
   );

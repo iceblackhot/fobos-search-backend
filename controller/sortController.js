@@ -17,9 +17,9 @@ exports.sortByAddDate = (req, res) => {
       ' LIMIT 0,3',
     (error, rows) => {
       if (error) {
-        console.log(error);
+        response.status(400, error, res);
       } else {
-        response.status(rows, res);
+        response.status(200, rows, res);
       }
     },
   );

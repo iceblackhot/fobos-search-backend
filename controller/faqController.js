@@ -17,9 +17,9 @@ exports.faq = (req, res) => {
       done,
     (error, rows, fields) => {
       if (error) {
-        console.log(error);
+        response.status(400, error, res);
       } else {
-        response.status(rows, res);
+        response.status(200, rows, res);
       }
     },
   );
@@ -39,9 +39,9 @@ exports.doneFaq = (req, res) => {
       done,
     (error, rows, fields) => {
       if (error) {
-        console.log(error);
+        response.status(400, error, res);
       } else {
-        response.status(rows, res);
+        response.status(200, rows, res);
       }
     },
   );

@@ -6,9 +6,9 @@ const db = require('../settings/db');
 exports.statuses = (req, res) => {
   db.query('SELECT * FROM `statuses`', (error, rows, fields) => {
     if (error) {
-      console.log(error);
+      response.status(400, error, res);
     } else {
-      response.status(rows, res);
+      response.status(200, rows, res);
     }
   });
 };
