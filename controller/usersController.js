@@ -6,25 +6,15 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
-exports.getAllUsers = (req, res) => {
-  db.query('SELECT `id`, `login`, `email` FROM `users`', (error, rows, fields) => {
-    if (error) {
-      response.status(400, error, res);
-    } else {
-      response.status(200, rows, res);
-    }
-  });
-};
-
 exports.signup = (req, res) => {
   db.query(
     "SELECT `id`, `login`, `email` FROM `users` WHERE `email` =  '" + req.body.email + "'",
     (error, rows, fields) => {
-      console.log(req.body);
+      // console.log(req.body.password);
       if (error) {
         response.status(400, error, res);
       } else if (typeof rows !== 'undefined' && rows.length > 0) {
-        console.log(rows);
+        // console.log(rows);
         const row = JSON.parse(JSON.stringify(rows));
         row.map((rw) => {
           response.status(
@@ -35,10 +25,9 @@ exports.signup = (req, res) => {
           return true;
         });
       } else {
-        //Need check login & email & pass !== ''
         const login = req.body.login;
-        const salt = bcrypt.genSaltSync(15);
-        const password = bcrypt.hashSync(req.body.password, salt);
+        // const password = bcrypt.hashSync(req.body.password, 12);
+        const password = req.body.password;
         const email = req.body.email;
 
         const sql =
@@ -65,6 +54,7 @@ exports.signin = (req, res) => {
   db.query(
     "SELECT `id`, `email`, `password` FROM `users` WHERE `email` = '" + req.body.email + "'",
     (error, rows, fields) => {
+      // console.log(req.body.password);
       if (error) {
         response.status(400, error, res);
       } else if (rows.length <= 0) {
@@ -76,12 +66,16 @@ exports.signin = (req, res) => {
       } else {
         const row = JSON.parse(JSON.stringify(rows));
         row.map((rw) => {
-          const password = bcrypt.compareSync(req.body.password, rw.password);
-          if (password) {
-            const token = jwt.sign({userId: rw.id, email: rw.email}, process.env.JWT, {
-              expiresIn: 120 * 120,
+          const password = req.body.password;
+          const isValid = bcrypt.compareSync(rw.password, password);
+          console.log(isValid);
+          if (isValid) {
+            const id = rw.id;
+            const email = rw.email;
+            const accessToken = jwt.sign({userId: rw.id, email: rw.email}, process.env.JWT, {
+              expiresIn: '1d',
             });
-            response.status(200, {token: `Bearer ${token}`}, res);
+            response.status(200, {id: id, email: email, token: `Bearer ${accessToken}`}, res);
           } else {
             response.status(401, {message: `Пароль не верный!`}, res);
           }

@@ -18,45 +18,84 @@ module.exports = (app) => {
   const faqController = require('./../controller/faqController');
   const connFilterController = require('./../controller/connFilterController');
 
-  app
-    .route('/api/users')
-    .get(passport.authenticate('jwt', {session: false}), usersController.getAllUsers);
   app.route('/api/auth/signup').post(usersController.signup);
-  app.route('/api/auth/signin').get(usersController.signin);
+  app.route('/api/auth/signin').post(usersController.signin);
 
-  app.route('/cities').get(citiesController.cities);
+  app.route('/cities').get(passport.authenticate('jwt', {session: false}), citiesController.cities);
 
-  app.route('/streets').get(streetsController.streets);
+  app
+    .route('/streets')
+    .get(passport.authenticate('jwt', {session: false}), streetsController.streets);
 
-  app.route('/statuses').get(statusesController.statuses);
+  app
+    .route('/statuses')
+    .get(passport.authenticate('jwt', {session: false}), statusesController.statuses);
 
-  app.route('/connType').get(connTypeController.connType);
+  app
+    .route('/connType')
+    .get(passport.authenticate('jwt', {session: false}), connTypeController.connType);
 
-  app.route('/workers').get(workersController.workers);
+  app
+    .route('/workers')
+    .get(passport.authenticate('jwt', {session: false}), workersController.workers);
 
-  app.route('/requests/:id').post(requestsController.requests);
-  app.route('/requests').post(requestsController.requests);
-  app.route('/requestsAdd').post(requestsController.add);
-  app.route('/requests/edit/save/:id').post(requestsController.editApply);
+  app
+    .route('/requests/:id')
+    .post(passport.authenticate('jwt', {session: false}), requestsController.requests);
 
-  app.route('/requests/edit/save/taskDone/:id').post(taskDoneController.taskDone);
+  app
+    .route('/requests')
+    .post(passport.authenticate('jwt', {session: false}), requestsController.requests);
 
-  app.route('/requests/:done').post(requestsController.requests);
+  app
+    .route('/requestsAdd')
+    .post(passport.authenticate('jwt', {session: false}), requestsController.add);
 
-  app.route('/countDoneReq').get(countController.countDoneReq);
-  app.route('/countRelevantReq').get(countController.countRelevantReq);
-  app.route('/countDoneFaq').get(countController.countDoneFaq);
-  app.route('/countRelevantFaq').get(countController.countRelevantFaq);
+  app
+    .route('/requests/edit/save/:id')
+    .post(passport.authenticate('jwt', {session: false}), requestsController.editApply);
 
-  app.route('/sortByAddDate/:done').post(sortController.sortByAddDate);
+  app
+    .route('/requests/edit/save/taskDone/:id')
+    .post(passport.authenticate('jwt', {session: false}), taskDoneController.taskDone);
 
-  app.route('/searchTask/:query').post(searchController.searchTask);
+  app
+    .route('/requests/:done')
+    .post(passport.authenticate('jwt', {session: false}), requestsController.requests);
 
-  app.route('/rangeByAddDate').post(rangeDateController.searchByDate);
+  app
+    .route('/countDoneReq')
+    .get(passport.authenticate('jwt', {session: false}), countController.countDoneReq);
 
-  app.route('/faq').get(faqController.faq);
-  app.route('/doneFaq').get(faqController.doneFaq);
+  app
+    .route('/countRelevantReq')
+    .get(passport.authenticate('jwt', {session: false}), countController.countRelevantReq);
 
-  app.route('/lan').get(connFilterController.lan);
-  app.route('/pon').get(connFilterController.pon);
+  app
+    .route('/countDoneFaq')
+    .get(passport.authenticate('jwt', {session: false}), countController.countDoneFaq);
+
+  app
+    .route('/countRelevantFaq')
+    .get(passport.authenticate('jwt', {session: false}), countController.countRelevantFaq);
+
+  app
+    .route('/sortByAddDate/:done')
+    .post(passport.authenticate('jwt', {session: false}), sortController.sortByAddDate);
+
+  app
+    .route('/searchTask/:query')
+    .post(passport.authenticate('jwt', {session: false}), searchController.searchTask);
+
+  app
+    .route('/rangeByAddDate')
+    .post(passport.authenticate('jwt', {session: false}), rangeDateController.searchByDate);
+
+  app.route('/faq').get(passport.authenticate('jwt', {session: false}), faqController.faq);
+
+  app.route('/doneFaq').get(passport.authenticate('jwt', {session: false}), faqController.doneFaq);
+
+  app.route('/lan').get(passport.authenticate('jwt', {session: false}), connFilterController.lan);
+
+  app.route('/pon').get(passport.authenticate('jwt', {session: false}), connFilterController.pon);
 };
