@@ -20,6 +20,7 @@ module.exports = (app) => {
 
   app.route('/api/auth/signup').post(usersController.signup);
   app.route('/api/auth/signin').post(usersController.signin);
+  // app.route('/api/auth/logout').post(usersController.logout);
 
   app.route('/cities').get(passport.authenticate('jwt', {session: false}), citiesController.cities);
 
@@ -98,4 +99,6 @@ module.exports = (app) => {
   app.route('/lan').get(passport.authenticate('jwt', {session: false}), connFilterController.lan);
 
   app.route('/pon').get(passport.authenticate('jwt', {session: false}), connFilterController.pon);
+
+  app.route('/newMonolith').post(requestsController.newMonolith);
 };

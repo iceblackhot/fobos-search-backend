@@ -14,15 +14,6 @@ require('./middleware/passport')(passport);
 const routes = require('./settings/routes');
 routes(app);
 
-const corsOptions = {
-  origin: 'http://localhost:3000/',
-  optionsSuccessStatus: 200,
-};
-
-app.get('/', cors(corsOptions), function (req, res, next) {
-  res.json({msg: 'This is CORS-enabled for only http://localhost:3000/'});
-});
-
 app.listen(port, () => {
   console.log(`App listen on port ${port}`);
 });

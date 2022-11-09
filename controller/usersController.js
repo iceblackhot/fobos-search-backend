@@ -73,7 +73,7 @@ exports.signin = (req, res) => {
             const id = rw.id;
             const email = rw.email;
             const accessToken = jwt.sign({userId: rw.id, email: rw.email}, process.env.JWT, {
-              expiresIn: '1d',
+              expiresIn: '10h',
             });
             response.status(200, {id: id, email: email, token: `Bearer ${accessToken}`}, res);
           } else {
@@ -85,3 +85,12 @@ exports.signin = (req, res) => {
     },
   );
 };
+
+// exports.logout = (req, res) => {
+//   req.logout(function (err) {
+//     if (err) {
+//       return next(err);
+//     }
+//     res.redirect('/');
+//   });
+// };
