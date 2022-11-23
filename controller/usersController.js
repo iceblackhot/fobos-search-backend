@@ -52,7 +52,9 @@ exports.signup = (req, res) => {
 
 exports.signin = (req, res) => {
   db.query(
-    "SELECT `id`, `email`, `password` FROM `users` WHERE `email` = '" + req.body.email + "'",
+    "SELECT `id`, `email`, `password`, `role` FROM `users` WHERE `email` = '" +
+      req.body.email +
+      "'",
     (error, rows, fields) => {
       // console.log(req.body.password);
       if (error) {
@@ -72,10 +74,14 @@ exports.signin = (req, res) => {
           if (isValid) {
             const id = rw.id;
             const email = rw.email;
-            const accessToken = jwt.sign({userId: rw.id, email: rw.email}, process.env.JWT, {
-              expiresIn: '10h',
-            });
-            response.status(200, {id: id, email: email, token: `Bearer ${accessToken}`}, res);
+            const accessToken = jwt.sign(
+              {userId: rw.id, email: rw.email, grouplist: rw.role},
+              process.env.JWT,
+              {
+                expiresIn: 60 * 60 * 24,
+              },
+            );
+            response.status(200, {id: id, email: email, token: accessToken}, res);
           } else {
             response.status(401, {message: `Пароль не верный!`}, res);
           }
@@ -86,11 +92,6 @@ exports.signin = (req, res) => {
   );
 };
 
-// exports.logout = (req, res) => {
-//   req.logout(function (err) {
-//     if (err) {
-//       return next(err);
-//     }
-//     res.redirect('/');
-//   });
-// };
+exports.logout = (req, res) => {
+  jwt.verify('', null, null);
+};

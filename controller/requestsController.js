@@ -2,6 +2,9 @@
 
 const response = require('../response');
 const db = require('../settings/db');
+const jwt = require('jsonwebtoken');
+var util = require('util');
+const {Console} = require('console');
 
 exports.requests = (req, res) => {
   let done = req.body.done ? req.body.done : 0;
@@ -118,6 +121,25 @@ exports.editApply = (req, res) => {
 };
 
 exports.newMonolith = (req, res) => {
+  let token = req.get('Authorization');
+  if (token == null) {
+    res.statusCode = 401;
+    res.send();
+    return;
+  }
+
+  let payload = null;
+
+  try {
+    payload = jwt.verify(token, process.env.JWT);
+  } catch (ex) {
+    res.statusCode = 401;
+    res.send();
+    return res;
+  }
+
+  let cities = payload.grouplist.split(';');
+
   var WHERE = ['1'];
   var WHERE_CITY = undefined;
   var WHERE_STREET = undefined;
@@ -125,59 +147,111 @@ exports.newMonolith = (req, res) => {
   var WHERE_WORKER = undefined;
   // console.log(req.body.citySelectedList);
   if (req.body.citySelectedList && req.body.citySelectedList.length > 0) {
-    WHERE_CITY = 'cities.id IN (' + req.body.citySelectedList.join() + ')';
+    WHERE_CITY =
+      'cities.id IN (' +
+      req.body.citySelectedList
+        .filter((value) => {
+          return cities.includes(value);
+        })
+        .join() +
+      ')';
+    WHERE.push(WHERE_CITY);
+  } else {
+    WHERE_CITY = 'cities.id IN (' + cities.join() + ')';
     WHERE.push(WHERE_CITY);
   }
   if (req.body.streetSelectedList && req.body.streetSelectedList.length > 0) {
-    WHERE_STREET = 'streets.id IN (' + req.body.streetSelectedList.join() + ')';
+    WHERE_STREET = 'streets.id IN (' + db.escape(req.body.streetSelectedList.join()) + ')';
     WHERE.push(WHERE_STREET);
   }
-  if (req.body.statusSelectedList && req.body.statusSelectedList.length) {
-    WHERE_STATUS = 'statuses.id IN (' + req.body.statusSelectedList.join() + ')';
+  if (req.body.statusSelectedList && req.body.statusSelectedList.length > 0) {
+    WHERE_STATUS = 'statuses.id IN (' + db.escape(req.body.statusSelectedList.join()) + ')';
     WHERE.push(WHERE_STATUS);
   }
-  if (req.body.workerSelectedList && req.body.workerSelectedList.length) {
-    WHERE_WORKER = 'workers.id IN (' + req.body.workerSelectedList.join() + ')';
+  if (req.body.workerSelectedList && req.body.workerSelectedList.length > 0) {
+    WHERE_WORKER = 'workers.id IN (' + db.escape(req.body.workerSelectedList.join()) + ')';
     WHERE.push(WHERE_WORKER);
   }
-  if (req.body.searchText && req.body.searchText > 2) {
+  if (req.body.searchText && req.body.searchText.length > 2) {
+    // console.log(req.body.searchText);
+    var text = db.escape('%' + req.body.searchText + '%');
     WHERE.push(
-      "(requests.fname LIKE '%" +
-        req.body.searchText +
-        "%' OR requests.lname LIKE '%" +
-        req.body.searchText +
-        "%' OR requests.patronymic LIKE '%" +
-        req.body.searchText +
-        "%' OR requests.comment LIKE '%" +
-        req.body.searchText +
-        "%' OR requests.mobile LIKE '%" +
-        req.body.searchText +
-        "%')",
+      '(requests.fname LIKE ' +
+        text +
+        ' OR requests.lname LIKE ' +
+        text +
+        ' OR requests.patronymic LIKE ' +
+        text +
+        ' OR requests.comment LIKE ' +
+        text +
+        ' OR requests.mobile LIKE ' +
+        text +
+        ')',
     );
   }
   if (req.body.plannedDateFrom) {
+    //var date_start = req.body.plannedDateFrom ? req.body.plannedDateFrom.split('T')[0] : '';
     var date_start = new Date(req.body.plannedDateFrom);
-    var date_end = req.body.plannedDateTo ? new Date(req.body.plannedDateTo) : new Date();
+    //var date_end = req.body.plannedDateTo ? req.body.plannedDateTo.split('T')[0] : '';
+    var date_end = new Date(req.body.plannedDateTo);
+
     WHERE.push(
       "requests.planDate BETWEEN '" +
-        date_start.toISOString().slice(0, 10) +
+        date_start.getFullYear() +
+        '-' +
+        String(date_start.getMonth() + 1).padStart(2, '0') +
+        '-' +
+        String(date_start.getDate()).padStart(2, '0') +
         " 00:00:00' AND '" +
-        date_end.toISOString().slice(0, 10) +
+        date_end.getFullYear() +
+        '-' +
+        String(date_end.getMonth() + 1).padStart(2, '0') +
+        '-' +
+        String(date_end.getDate()).padStart(2, '0') +
         " 23:59:59'",
     );
+    // console.log(
+    //   date_start.getFullYear() +
+    //     '-' +
+    //     String(date_start.getMonth() + 1).padStart(2, '0') +
+    //     '-' +
+    //     String(date_start.getDate()).padStart(2, '0') +
+    //     ' ' +
+    //     date_end.toString(),
+    // );
   }
-  if (req.body.type) {
-    WHERE.push('requests.type = ' + req.body.type);
+  if (typeof req.body.type !== 'undefined') {
+    // console.log('taskType - ' + req.body.type);
+    WHERE.push('requests.type = ' + db.escape(req.body.type));
   }
-  if (req.body.taskDone) {
-    WHERE.push('requests.taskDone = ' + req.body.taskDone);
+  if (typeof req.body.taskDone !== 'undefined') {
+    // console.log('taskDone - ' + req.body.taskDone);
+    WHERE.push('requests.taskDone = ' + db.escape(req.body.taskDone));
   }
+  if (typeof req.body.connTypeId !== 'undefined') {
+    // console.log('taskDone - ' + req.body.taskDone);
+    if (req.body.connTypeId > 0) {
+      WHERE.push('requests.connTypeId = ' + db.escape(req.body.connTypeId));
+    }
+  }
+
+  var limitStart = 0;
+  var limitStop = 10;
+
+  limitStart = req.body.currentPage * req.body.pageRows;
+  limitStop = req.body.pageRows;
+
+  // console.log(' LIMIT ' + limitStart + ',' + limitStop);
 
   res.status = 500;
 
   db.query(
-    'SELECT requests.id, requests.cityId, cities.cityName, requests.streetId, streets.streetName, requests.statusId, statuses.statusName, requests.workerId, workers.workerName, requests.planDate, requests.building, requests.section, requests.entrance, requests.floor, requests.apartment, requests.mobile, requests.addDate, requests.lname, requests.fname, requests.patronymic, requests.comment, requests.taskDone, requests.type, requests.priority, requests.connTypeId FROM requests LEFT JOIN cities ON requests.cityId = cities.id LEFT JOIN streets ON requests.streetId = streets.id LEFT JOIN statuses ON requests.statusId = statuses.id LEFT JOIN workers ON requests.workerId = workers.id LEFT JOIN connection ON requests.connTypeId = connection.id WHERE ' +
-      WHERE.join(' AND '),
+    "SELECT requests.id, requests.cityId, cities.cityName, requests.streetId, streets.streetName, requests.statusId, statuses.statusName, requests.workerId, workers.workerName, IFNULL(requests.planDate, '') AS planDate, requests.building, requests.section, requests.entrance, requests.floor, requests.apartment, requests.mobile, requests.addDate, requests.lname, requests.fname, requests.patronymic, requests.comment, requests.taskDone, requests.type, requests.priority, requests.connTypeId FROM requests LEFT JOIN cities ON requests.cityId = cities.id LEFT JOIN streets ON requests.streetId = streets.id LEFT JOIN statuses ON requests.statusId = statuses.id LEFT JOIN workers ON requests.workerId = workers.id LEFT JOIN connection ON requests.connTypeId = connection.id WHERE " +
+      WHERE.join(' AND ') +
+      ' LIMIT ' +
+      limitStart +
+      ',' +
+      limitStop,
     (error, rows, fields) => {
       if (error) {
         res.status = 500; // Internal Server Error
@@ -186,7 +260,9 @@ exports.newMonolith = (req, res) => {
       } else {
         var taskList = rows;
         db.query(
-          'SELECT cities.id, cities.cityName AS name FROM cities ORDER BY cityName ASC',
+          'SELECT cities.id, cities.id as value, cities.cityName AS name, cities.cityName AS label FROM cities WHERE ' +
+            WHERE_CITY +
+            ' ORDER BY cityName ASC',
           (error, rows, fields) => {
             if (error) {
               res.status = 500;
@@ -194,8 +270,8 @@ exports.newMonolith = (req, res) => {
             } else {
               var cityList = rows;
               db.query(
-                "SELECT streets.id, streets.cityId, CONCAT(streets.streetName, ' (', cities.cityName, ')') AS name FROM streets INNER JOIN cities ON streets.cityId = cities.id" +
-                  (WHERE_CITY ? ' WHERE (' + WHERE_CITY + ')' : ''),
+                "SELECT streets.id, streets.id AS value, streets.cityId, CONCAT(streets.streetName, ' (', cities.cityName, ')') AS name, streets.cityId, CONCAT(streets.streetName, ' (', cities.cityName, ')') AS label FROM streets INNER JOIN cities ON streets.cityId = cities.id WHERE " +
+                  WHERE_CITY,
                 (error, rows, fields) => {
                   if (error) {
                     res.status = 500;
@@ -204,7 +280,7 @@ exports.newMonolith = (req, res) => {
                   } else {
                     var streetList = rows;
                     db.query(
-                      'SELECT statuses.id, statuses.statusName AS name FROM statuses',
+                      'SELECT statuses.id, statuses.id AS value, statuses.statusName AS name, statuses.statusName AS label FROM statuses',
                       (error, rows, fields) => {
                         if (error) {
                           res.status = 500;
@@ -213,7 +289,7 @@ exports.newMonolith = (req, res) => {
                         } else {
                           var statusList = rows;
                           db.query(
-                            'SELECT workers.id, workers.workerName AS name FROM workers',
+                            'SELECT workers.id, workers.id AS value, workers.workerName AS name, workers.workerName AS label FROM workers',
                             (error, rows, fields) => {
                               if (error) {
                                 res.status = 500;
@@ -221,6 +297,8 @@ exports.newMonolith = (req, res) => {
                                 res.end();
                               } else {
                                 var workerList = rows;
+
+                                // console.log(WHERE.join(' AND '));
                                 db.query(
                                   'SELECT COUNT(requests.id) AS taskTotal FROM requests LEFT JOIN cities ON requests.cityId = cities.id LEFT JOIN streets ON requests.streetId = streets.id LEFT JOIN statuses ON requests.statusId = statuses.id LEFT JOIN workers ON requests.workerId = workers.id LEFT JOIN connection ON requests.connTypeId = connection.id WHERE ' +
                                     WHERE.join(' AND '),
@@ -230,6 +308,22 @@ exports.newMonolith = (req, res) => {
                                       res.json(error);
                                     } else {
                                       res.status = 200;
+                                      let new_token = null;
+                                      if (
+                                        payload.exp - Math.floor(Date.now() / 1000) <=
+                                        Math.floor(process.env.JWT_EXPIRE_TIME / 2)
+                                      )
+                                        new_token = jwt.sign(
+                                          {
+                                            userId: payload.id,
+                                            email: payload.email,
+                                            grouplist: payload.grouplist,
+                                          },
+                                          process.env.JWT,
+                                          {
+                                            expiresIn: 60 * 60 * 24,
+                                          },
+                                        );
                                       res.json({
                                         cityList: cityList,
                                         streetList: streetList,
@@ -237,6 +331,7 @@ exports.newMonolith = (req, res) => {
                                         workerList: workerList,
                                         taskList: taskList,
                                         taskTotal: rows[0].taskTotal,
+                                        token: new_token,
                                       });
                                     }
                                   },
@@ -256,4 +351,69 @@ exports.newMonolith = (req, res) => {
       }
     },
   );
+};
+
+exports.newMonolithSave = (req, res) => {
+  let token = req.get('Authorization');
+  if (token == null) {
+    res.statusCode = 401;
+    res.send();
+    return;
+  }
+  let payload = null;
+  try {
+    payload = jwt.verify(token, process.env.JWT);
+  } catch (ex) {
+    res.statusCode = 401;
+    res.send();
+    return res;
+  }
+
+  if (typeof req.body.task.id != 'undefined') {
+    let sql = '';
+
+    if (req.body.task.id > 0) {
+      sql =
+        'UPDATE requests SET cityId = ?, streetId = ?, fname = ?, lname = ?, patronymic = ?, statusId = ?, workerId = ?, planDate = ?, chgDate = NOW(), comment = ?, building = ?, section = ?, entrance = ?, floor = ?, apartment = ?, mobile = ?, taskDone = ?, type = ?, priority = ?, connTypeId = ? WHERE id = ?';
+    } else {
+      sql =
+        'INSERT INTO requests (cityId, streetId, fname, lname, patronymic, statusId, workerId, planDate, addDate, chgDate, comment, building, section, entrance, floor, apartment, mobile, taskDone, type, priority, connTypeId) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+    }
+    console.log(sql);
+    db.query(
+      sql,
+      [
+        req.body.task.cityId,
+        req.body.task.streetId,
+        req.body.task.fname,
+        req.body.task.lname,
+        req.body.task.patronymic,
+        req.body.task.statusId,
+        req.body.task.workerId,
+        req.body.task.planDate == '0000-00-00 00:00:00' ? null : req.body.task.planDate,
+        req.body.task.comment,
+        req.body.task.building,
+        req.body.task.section,
+        req.body.task.entrance,
+        req.body.task.floor,
+        req.body.task.apartment,
+        req.body.task.mobile,
+        req.body.task.taskDone,
+        req.body.task.type,
+        req.body.task.priority,
+        req.body.task.connTypeId,
+        req.body.task.id,
+      ],
+      (error, rows, fields) => {
+        if (error) {
+          throw error;
+        } else {
+          res.status = 200;
+          res.json({
+            result: 0,
+          });
+        }
+      },
+    );
+  }
 };

@@ -19,8 +19,8 @@ module.exports = (app) => {
   const connFilterController = require('./../controller/connFilterController');
 
   app.route('/api/auth/signup').post(usersController.signup);
-  app.route('/api/auth/signin').post(usersController.signin);
-  // app.route('/api/auth/logout').post(usersController.logout);
+  app.route('/checkAuth').post(usersController.signin);
+  app.route('/api/auth/logout').post(usersController.logout);
 
   app.route('/cities').get(passport.authenticate('jwt', {session: false}), citiesController.cities);
 
@@ -100,5 +100,7 @@ module.exports = (app) => {
 
   app.route('/pon').get(passport.authenticate('jwt', {session: false}), connFilterController.pon);
 
+  app.route('/newMonolith').get(requestsController.newMonolith);
   app.route('/newMonolith').post(requestsController.newMonolith);
+  app.route('/newMonolithSave').post(requestsController.newMonolithSave);
 };
