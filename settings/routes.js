@@ -103,4 +103,5 @@ module.exports = (app) => {
   app.route('/newMonolith').get(requestsController.newMonolith);
   app.route('/newMonolith').post(requestsController.newMonolith);
   app.route('/newMonolithSave').post(requestsController.newMonolithSave);
+  app.route('/newMonolithHistory').post(requestsController.newMonolithHistory);
 };

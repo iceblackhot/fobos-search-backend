@@ -5,6 +5,8 @@ const db = require('../settings/db');
 const jwt = require('jsonwebtoken');
 var util = require('util');
 const {Console} = require('console');
+const {request} = require('http');
+const {timingSafeEqual} = require('crypto');
 
 exports.requests = (req, res) => {
   let done = req.body.done ? req.body.done : 0;
@@ -369,6 +371,8 @@ exports.newMonolithSave = (req, res) => {
     return res;
   }
 
+  let admin = payload;
+
   if (typeof req.body.task.id != 'undefined') {
     let sql = '';
 
@@ -379,41 +383,203 @@ exports.newMonolithSave = (req, res) => {
       sql =
         'INSERT INTO requests (cityId, streetId, fname, lname, patronymic, statusId, workerId, planDate, addDate, chgDate, comment, building, section, entrance, floor, apartment, mobile, taskDone, type, priority, connTypeId) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
     }
-    console.log(sql);
     db.query(
-      sql,
-      [
-        req.body.task.cityId,
-        req.body.task.streetId,
-        req.body.task.fname,
-        req.body.task.lname,
-        req.body.task.patronymic,
-        req.body.task.statusId,
-        req.body.task.workerId,
-        req.body.task.planDate == '0000-00-00 00:00:00' ? null : req.body.task.planDate,
-        req.body.task.comment,
-        req.body.task.building,
-        req.body.task.section,
-        req.body.task.entrance,
-        req.body.task.floor,
-        req.body.task.apartment,
-        req.body.task.mobile,
-        req.body.task.taskDone,
-        req.body.task.type,
-        req.body.task.priority,
-        req.body.task.connTypeId,
-        req.body.task.id,
-      ],
+      "SELECT requests.id, requests.cityId, cities.cityName, requests.streetId, streets.streetName, requests.statusId, statuses.statusName, requests.workerId, workers.workerName, IFNULL(requests.planDate, '') AS planDate, requests.building, requests.section, requests.entrance, requests.floor, requests.apartment, requests.mobile, requests.addDate, requests.lname, requests.fname, requests.patronymic, requests.comment, requests.taskDone, requests.type, requests.priority, requests.connTypeId FROM requests LEFT JOIN cities ON requests.cityId = cities.id LEFT JOIN streets ON requests.streetId = streets.id LEFT JOIN statuses ON requests.statusId = statuses.id LEFT JOIN workers ON requests.workerId = workers.id LEFT JOIN connection ON requests.connTypeId = connection.id WHERE requests.id = ?",
+      [req.body.task.id],
       (error, rows, fields) => {
-        if (error) {
-          throw error;
-        } else {
-          res.status = 200;
-          res.json({
-            result: 0,
-          });
+        let request_old = null;
+        if (typeof rows !== 'undefined') {
+          request_old = rows[0];
         }
+        db.query(
+          sql,
+          [
+            req.body.task.cityId,
+            req.body.task.streetId,
+            req.body.task.fname,
+            req.body.task.lname,
+            req.body.task.patronymic,
+            req.body.task.statusId,
+            req.body.task.workerId,
+            req.body.task.planDate == '0000-00-00 00:00:00' ? null : req.body.task.planDate,
+            req.body.task.comment,
+            req.body.task.building,
+            req.body.task.section,
+            req.body.task.entrance,
+            req.body.task.floor,
+            req.body.task.apartment,
+            req.body.task.mobile,
+            req.body.task.taskDone,
+            req.body.task.type,
+            req.body.task.priority,
+            req.body.task.connTypeId,
+            req.body.task.id,
+          ],
+          (error, rows, fields) => {
+            if (error) {
+              throw error;
+            } else {
+              let changes = '';
+              console.log(request_old);
+              if (req.body.task.id > 0) {
+                if (req.body.task.cityId != request_old.cityId) {
+                  changes +=
+                    'Місто: ' + request_old.cityName + ' -> ' + req.body.task.cityName + ' | ';
+                }
+                if (req.body.task.streetId != request_old.streetId) {
+                  changes +=
+                    'Вулиця: ' + request_old.streetName + ' -> ' + req.body.task.streetName + ' | ';
+                }
+                if (req.body.task.fname != request_old.fname) {
+                  changes += "Ім'я: " + request_old.fname + ' -> ' + req.body.task.fname + ' | ';
+                }
+                if (req.body.task.fname != request_old.lname) {
+                  changes += 'Фамілія: ' + request_old.lname + ' -> ' + req.body.task.lname + ' | ';
+                }
+                if (req.body.task.fname != request_old.patronymic) {
+                  changes +=
+                    'По-батькові: ' +
+                    request_old.patronymic +
+                    ' -> ' +
+                    req.body.task.patronymic +
+                    ' | ';
+                }
+                if (req.body.task.statusId != request_old.statusId) {
+                  changes +=
+                    'Статус: ' + request_old.statusName + ' -> ' + req.body.task.statusName + ' | ';
+                }
+                if (req.body.task.workerId != request_old.workerId) {
+                  changes +=
+                    'Робітник: ' +
+                    request_old.workerName +
+                    ' -> ' +
+                    req.body.task.workerName +
+                    ' | ';
+                }
+                if (req.body.task.planDate != request_old.planDate) {
+                  changes +=
+                    'Запланована дата: ' +
+                    request_old.planDate +
+                    ' -> ' +
+                    req.body.task.planDate +
+                    ' | ';
+                }
+                if (req.body.task.comment != request_old.comment) {
+                  changes +=
+                    'Коментарій: ' + request_old.comment + ' -> ' + req.body.task.comment + ' | ';
+                }
+                if (req.body.task.building != request_old.building) {
+                  changes +=
+                    'Будинок: ' + request_old.building + ' -> ' + req.body.task.building + ' | ';
+                }
+                if (req.body.task.section != request_old.section) {
+                  changes +=
+                    'Секція: ' + request_old.section + ' -> ' + req.body.task.section + ' | ';
+                }
+                if (req.body.task.entrance != request_old.entrance) {
+                  changes +=
+                    'Підїзд: ' + request_old.entrance + ' -> ' + req.body.task.entrance + ' | ';
+                }
+                if (req.body.task.floor != request_old.floor) {
+                  changes += 'Поверх: ' + request_old.floor + ' -> ' + req.body.task.floor + ' | ';
+                }
+                if (req.body.task.apartment != request_old.apartment) {
+                  changes +=
+                    'Квартира: ' + request_old.apartment + ' -> ' + req.body.task.apartment + ' | ';
+                }
+                if (req.body.task.mobile != request_old.mobile) {
+                  changes +=
+                    'Телефон: ' + request_old.mobile + ' -> ' + req.body.task.mobile + ' | ';
+                }
+                if (req.body.task.connTypeId != request_old.connTypeId) {
+                  let connType = ['', 'LAN', 'PON'];
+                  changes +=
+                    'Тип пдключення: ' +
+                    connType[request_old.connTypeId] +
+                    ' -> ' +
+                    connType[req.body.task.connTypeId] +
+                    ' | ';
+                }
+                if (req.body.task.taskDone != request_old.taskDone) {
+                  let taskStatus = ['Поточна', 'Виконана'];
+                  changes +=
+                    'Виконана чи ні: ' +
+                    taskStatus[request_old.taskDone] +
+                    ' -> ' +
+                    taskStatus[req.body.task.taskDone] +
+                    ' | ';
+                }
+                if (req.body.task.type != request_old.type) {
+                  let taskType = ['', 'Підключення', 'FAQ'];
+                  changes +=
+                    'Заявка чи FAQ: ' +
+                    taskType[request_old.type] +
+                    ' -> ' +
+                    taskType[req.body.task.type] +
+                    ' | ';
+                }
+                if (req.body.task.priority != request_old.priority) {
+                  let taskPriority = ['', 'Звичайна', 'Важлива', 'Критична'];
+                  changes +=
+                    'Пріорітет заявки: ' +
+                    taskPriority[request_old.priority] +
+                    ' -> ' +
+                    taskPriority[req.body.task.priority] +
+                    ' | ';
+                }
+              } else {
+                changes = 'Створено';
+              }
+              console.log([
+                req.body.task.id > 0 ? req.body.task.id : rows.insertId,
+                changes,
+                admin,
+              ]);
+              db.query(
+                'INSERT INTO history (request_id, changes, user) VALUES (?, ?, ?)',
+                [req.body.task.id > 0 ? req.body.task.id : rows.insertId, changes, admin.userId],
+                (error, rows, fields) => {
+                  res.status = 200;
+                  res.json({
+                    result: 0,
+                  });
+                },
+              );
+            }
+          },
+        );
       },
     );
   }
+};
+
+exports.newMonolithHistory = (req, res) => {
+  let token = req.get('Authorization');
+  if (token == null) {
+    res.statusCode = 401;
+    res.send();
+    return;
+  }
+  let payload = null;
+  try {
+    payload = jwt.verify(token, process.env.JWT);
+  } catch (ex) {
+    res.statusCode = 401;
+    res.send();
+    return res;
+  }
+
+  let admin = payload;
+
+  db.query(
+    'SELECT a.date, a.changes, b.login FROM history AS a LEFT JOIN users AS b ON a.user = b.id WHERE a.request_id = ? ORDER BY a.id DESC',
+    [req.body.task.id],
+    (error, rows, fields) => {
+      if (error) {
+        throw error;
+      } else {
+        res.json(rows);
+      }
+    },
+  );
 };
