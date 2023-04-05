@@ -13,6 +13,6 @@ app.use(cors());
 const routes = require('./settings/routes');
 routes(app);
 
-app.listen(process.env.PORT, () => {
-  console.log(`App listen on port ${process.env.HOST_PORT}`);
+app.listen(process.env.HOST_PORT, () => {
+  console.log(`App listen on port ${process.env.HOST_PORT | process.env.HOST}`);
 });
