@@ -14,5 +14,5 @@ const routes = require('./settings/routes');
 routes(app);
 
 app.listen(process.env.PORT, () => {
-  console.log(`App listen on port ${process.env.PORT | process.env.HOST}`);
+  console.log(`App listen on port ${process.env.HOST_PORT}`);
 });
