@@ -11,6 +11,7 @@ app.use(bodyParser.json());
 app.use(
   cors({
     origin: process.env.FRONT_HOST,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'UPDATE'],
   }),
 );
 
