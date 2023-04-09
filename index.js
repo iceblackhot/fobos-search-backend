@@ -11,6 +11,7 @@ app.use(bodyParser.json());
 app.use(
   cors({
     origin: process.env.FRONT_HOST,
+    optionsSuccessStatus: 200,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'UPDATE'],
   }),
 );
@@ -19,5 +20,5 @@ const routes = require('./settings/routes');
 routes(app);
 
 app.listen(process.env.HOST_PORT, () => {
-  console.log(`App listen on port ${process.env.HOST_PORT | process.env.HOST_SERVER}`);
+  console.log(`App listen on port ${process.env.HOST_PORT}`);
 });
