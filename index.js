@@ -13,7 +13,7 @@ app.use(
   cors({
     origin: process.env.FRONT_HOST,
     optionsSuccessStatus: 200,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'UPDATE'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'UPDATE', 'OPTIONS'],
   }),
 );
 
