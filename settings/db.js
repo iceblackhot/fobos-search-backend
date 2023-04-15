@@ -12,7 +12,6 @@ const connection = mysql.createConnection({
 });
 
 connection.connect((error) => {
-  console.log(error.code);
   if (error) {
     return console.log(error.message);
   } else {
