@@ -17,6 +17,8 @@ app.use(
   }),
 );
 
+console.log(process.env);
+
 const routes = require('./settings/routes');
 routes(app);
 
